@@ -139,10 +139,10 @@ Datos Limpios (Parquet)
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Apache Spark Engine                        │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐      │
-│  │ Spark Driver  │  │ Spark Executor│  │ Catalyst      │      │
-│  │   (Master)    │  │   (Worker)    │  │ (Optimizer)   │      │
-│  └───────────────┘  └───────────────┘  └───────────────┘      │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐        │
+│  │ Spark Driver  │  │ Spark Executor│  │ Catalyst      │        │
+│  │   (Master)    │  │   (Worker)    │  │ (Optimizer)   │        │
+│  └───────────────┘  └───────────────┘  └───────────────┘        │
 └─────────────────────────────────────────────────────────────────┘
 ```
 - **Función**: Procesamiento distribuido de datos
@@ -236,8 +236,8 @@ Validation → Parquet Output
 | **Aspecto** | **Antes** | **Después** | **Mejora** |
 |-------------|-----------|-------------|------------|
 | **Tipos Correctos** | 40% | 100% | +60% |
-| **Nulos Críticos** | 2,069+ | 0 | -100% |
-| **Duplicados** | 1,763 | 0 | -100% |
+| **Nulos Críticos** | 2,069+ | 0 | +100% |
+| **Duplicados** | 1,763 | 0 | +100% |
 | **Datos Geográficos** | Mixtos | 100% válidos | +100% |
 
 ### 🚀 Escalabilidad y Evolución
@@ -287,11 +287,6 @@ Airflow → Spark Cluster → HDFS/S3 → BI Tools
 
 ### 🚀 **PASO 1: Inicialización del Entorno**
 ```python
-# Configuración de Spark
-os.environ["JAVA_HOME"] = r"C:\java"
-os.environ["HADOOP_HOME"] = r"C:\hadoop"
-findspark.init(r"C:\spark")
-
 # Creación de SparkSession
 spark = SparkSession.builder \
     .appName("PipelineLimpiezaAirbnb") \
@@ -421,7 +416,7 @@ ORDER BY precio_promedio DESC LIMIT 5;
 ## 📁 Estructura de Archivos
 
 ```
-d:\UPAO\VIII\Big Data\Proyecto\
+Big Data\Proyecto\
 ├── airbnb.ipynb                    # Notebook principal del pipeline
 ├── listings.csv                    # Dataset original de propiedades
 ├── neighbourhoods.csv              # Dataset original de barrios  
@@ -430,8 +425,6 @@ d:\UPAO\VIII\Big Data\Proyecto\
 │   ├── listings_clean.parquet      # Propiedades limpias (14,960)
 │   ├── neighbourhoods_clean.parquet # Barrios limpios (32)
 │   └── reviews_clean.parquet       # Reseñas limpias (452,609)
-├── sample_listings_from_parquet/   # Muestra en CSV (demo)
-├── sample_listings_json/           # Muestra en JSON (demo)
 └── README.md                       # Este archivo
 ```
 
@@ -442,20 +435,6 @@ d:\UPAO\VIII\Big Data\Proyecto\
 2. **Apache Spark** descargado y configurado
 3. **Python 3.7+** con PySpark instalado
 4. **Jupyter Notebook** o VS Code con extensión Python
-
-### **Configuración del Entorno:**
-```bash
-# 1. Instalar dependencias Python
-pip install pyspark findspark jupyter
-
-# 2. Configurar variables de entorno
-export JAVA_HOME="/path/to/java"
-export SPARK_HOME="/path/to/spark"
-export PATH="$SPARK_HOME/bin:$PATH"
-
-# 3. Iniciar Jupyter Notebook
-jupyter notebook airbnb.ipynb
-```
 
 ### **Ejecución del Pipeline:**
 1. **Ejecutar todas las celdas** secuencialmente
@@ -503,39 +482,6 @@ jupyter notebook airbnb.ipynb
 - ✅ Funciones reutilizables para conversiones
 - ✅ Logging detallado de cada paso
 - ✅ Verificación automática de resultados
-
-## 🔮 Siguientes Pasos Recomendados
-
-### **Análisis Avanzado:**
-1. **Análisis temporal** de precios y disponibilidad
-2. **Modelos predictivos** de demanda por barrio
-3. **Análisis de sentimientos** en reseñas de huéspedes
-4. **Detección de anomalías** en patrones de reservas
-
-### **Expansión del Pipeline:**
-1. **Automatización** con Apache Airflow
-2. **Integración** con bases de datos en tiempo real  
-3. **Monitoreo** de calidad de datos continuo
-4. **Escalamiento** a otros datasets de Airbnb
-
-### **Visualización:**
-1. **Dashboard interactivo** en Power BI/Tableau
-2. **Mapas geográficos** con distribución de precios
-3. **Análisis comparativo** entre barrios
-4. **Métricas KPI** para el negocio Airbnb
-
-## 👥 Contribuciones y Contacto
-
-**Estudiante:** [Tu Nombre]  
-**Universidad:** Universidad Privada Antenor Orrego (UPAO)  
-**Curso:** Big Data - VIII Ciclo  
-**Fecha:** Septiembre 2025
-
-## 📜 Licencia
-
-Este proyecto es desarrollado con fines académicos para el curso de Big Data en UPAO.
-
----
 
 ## 🎉 Conclusiones
 
