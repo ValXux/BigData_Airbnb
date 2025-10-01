@@ -84,11 +84,17 @@ Jupyter Notebook Environment
 #### 4. **💾 Sistema de Almacenamiento**
 ```
 Datos Limpios (Parquet)
-├── listings_clean.parquet (14,960 registros)
-├── neighbourhoods_clean.parquet (32 registros)
-└── reviews_clean.parquet (452,609 registros)
+├── data_clean/                    # Carpeta de acceso directo
+│   ├── listings_clean.parquet (14,960 registros)
+│   ├── neighbourhoods_clean.parquet (32 registros)
+│   └── reviews_clean.parquet (452,609 registros)
+└── data_clean_parquet/            # Carpeta original
+    ├── listings_clean.parquet (14,960 registros)
+    ├── neighbourhoods_clean.parquet (32 registros)
+    └── reviews_clean.parquet (452,609 registros)
 ```
 - **Características**: Formato columnar optimizado, compresión Snappy
+- **Acceso**: Disponible desde ambas carpetas (data_clean y data_clean_parquet)
 
 ### 🔄 Diagrama de Flujo de Arquitectura
 
@@ -421,7 +427,12 @@ Big Data\Proyecto\
 ├── listings.csv                    # Dataset original de propiedades
 ├── neighbourhoods.csv              # Dataset original de barrios  
 ├── reviews.csv                     # Dataset original de reseñas
-├── data_clean_parquet/             # Directorio de datos limpios
+├── data_clean/                     # Directorio de acceso a datos limpios
+│   ├── listings_clean.parquet      # Propiedades limpias (14,960)
+│   ├── neighbourhoods_clean.parquet # Barrios limpios (32)
+│   ├── reviews_clean.parquet       # Reseñas limpias (452,609)
+│   └── README.md                   # Documentación de la carpeta
+├── data_clean_parquet/             # Directorio original de datos limpios
 │   ├── listings_clean.parquet      # Propiedades limpias (14,960)
 │   ├── neighbourhoods_clean.parquet # Barrios limpios (32)
 │   └── reviews_clean.parquet       # Reseñas limpias (452,609)
