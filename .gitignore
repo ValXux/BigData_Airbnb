@@ -1,2 +1,24 @@
 venv/
 .docx
+
+# Archivos de configuración sensibles
+.env
+config.ini
+secrets.json
+*_secrets.py
+
+# Archivos de Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Archivos de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Archivos de datos grandes
+*.csv
+*.parquet
+data_clean_parquet/

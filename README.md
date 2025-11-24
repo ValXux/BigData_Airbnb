@@ -1,497 +1,198 @@
-# 🏠 Pipeline de Limpieza de Datos de Airbnb Santiago - Proyecto Big Data
+# Proyecto Big Data Airbnb – Predicción de Precios
 
-## 📋 Información del Proyecto
+Este proyecto implementa un pipeline de Big Data para **predecir precios de alojamientos de Airbnb** a partir de información histórica de anuncios y calendario.
 
-**Universidad:** Universidad Privada Antenor Orrego  
-**Curso:** Big Data (VIII Ciclo)  
-**Proyecto:** Pipeline ETL para datos de Airbnb
-**Docente:** Armando Caballero Alvarado
-**Integrantes:**
-- Aguilar Alayo, Alessia
-- Donayre Alvarez, Jose
-- Fernandez Gutierrez, Valentin
-- Leon Rojas, Franco
-- Moreno Quevedo, Camila  
+## 1. Arquitectura general
 
-**Tecnología Principal:** Apache Spark con PySpark  
-**Formato de Salida:** Parquet (optimizado para Big Data)
+Componentes principales:
 
-## 🎯 Objetivos del Proyecto
+1. **Kafka**: cola de mensajes para simular la ingesta en *streaming* de los datasets de Airbnb.
+2. **Apache Spark (PySpark)**:
+   - Ingesta desde Kafka y generación de capas **BRONZE / SILVER / GOLD** en formato Parquet.
+   - Limpieza, enriquecimiento y *feature engineering*.
+   - Entrenamiento de un modelo de **Random Forest Regressor** con validación cruzada.
+3. **Almacenamiento local** (simulación de data lake) en `C:/airbnb/`.
+4. **Power BI**: consumo de la tabla GOLD (predicciones) y construcción del dashboard.
 
-1. **Implementar un pipeline completo de ETL** para datos de Airbnb
-2. **Limpiar y normalizar datos** de múltiples fuentes (listings, neighbourhoods, reviews)
-3. **Aplicar técnicas de Big Data** usando Apache Spark
-4. **Optimizar el almacenamiento** transformando a formato Parquet
-5. **Preparar datos** para análisis avanzados y machine learning
+## 2. Requisitos de entorno
 
-## 📊 Descripción de los Datos
+- Windows 11
+- JDK 17
+- Apache Spark 3.5.x
+- Hadoop (librerías, `HADOOP_HOME`)
+- Python 3.10 + `venv`
+- Kafka 3.x
+- Power BI Desktop
 
-### Datasets Originales:
-- **`listings.csv`**: 15,143 registros de propiedades Airbnb
-- **`neighbourhoods.csv`**: 32 registros de barrios de Santiago
-- **`reviews.csv`**: 454,372 registros de reseñas de huéspedes
+Variables de entorno típicas:
 
-### Datasets Finales (Limpios):
-- **`listings_clean.parquet`**: 14,960 registros optimizados
-- **`neighbourhoods_clean.parquet`**: 32 registros sin valores nulos
-- **`reviews_clean.parquet`**: 452,609 registros sin duplicados
+- `JAVA_HOME`
+- `SPARK_HOME`
+- `HADOOP_HOME`
+- Añadir a `PATH`: `SPARK_HOME/bin`, `HADOOP_HOME/bin` y binarios de Kafka.
 
-## 🔧 Tecnologías Utilizadas
+## 3. Estructura de carpetas
 
-| Tecnología | Versión | Propósito |
-|------------|---------|-----------|
-| **Apache Spark** | 3.x | Motor de procesamiento distribuido |
-| **PySpark** | 3.x | API Python para Spark |
-| **Python** | 3.x | Lenguaje de programación |
-| **Jupyter Notebook** | Latest | Entorno de desarrollo interactivo |
-| **Parquet** | - | Formato de almacenamiento columnar |
-| **Snappy** | - | Algoritmo de compresión |
-
-## 🏗️ Arquitectura del Sistema
-
-### 🎭 Actores Principales del Sistema
-
-#### 1. **📁 Fuentes de Datos (Data Sources)**
-```
-Datos de Entrada (CSV)
-├── listings.csv (15,143 registros)
-├── neighbourhoods.csv (32 registros)
-└── reviews.csv (454,372 registros)
-```
-- **Características**: Datos sin procesar, múltiples formatos, calidad variable
-- **Origen**: Datasets reales de Airbnb Santiago, Chile
-
-#### 2. **⚡ Motor de Procesamiento (Processing Engine)**
-```
-Apache Spark Cluster
-├── SparkSession (Punto de entrada)
-├── DataFrame API (Manipulación de datos)
-├── Spark SQL Engine (Consultas SQL)
-└── Catalyst Optimizer (Optimización automática)
-```
-- **Características**: Procesamiento distribuido, tolerante a fallos
-- **Configuración**: Modo standalone local
-
-#### 3. **📓 Entorno de Desarrollo**
-```
-Jupyter Notebook Environment
-├── VS Code + Python Extension
-├── Interactive Cells (Ejecución paso a paso)
-└── Kernel Management (Gestión de sesiones)
-```
-- **Características**: Desarrollo interactivo, documentación en vivo
-
-#### 4. **💾 Sistema de Almacenamiento**
-```
-Datos Limpios (Parquet)
-├── listings_clean.parquet (14,960 registros)
-├── neighbourhoods_clean.parquet (32 registros)
-└── reviews_clean.parquet (452,609 registros)
-```
-- **Características**: Formato columnar optimizado, compresión Snappy
-
-### 🔄 Diagrama de Flujo de Arquitectura
-
-![Arquitectura del Sistema ETL Airbnb](arquitectura.png)
-
-#### **Flujo ETL Detallado:**
-
-```
-[📁 CSV Files] → [⚡ Spark Reader] → [🔍 Schema Inference] → [📊 DataFrame Creation]
-       ↓
-[🔍 Exploración] → [📈 Profiling] → [🚨 Quality Assessment] → [📋 Problem Identification]
-       ↓
-[🧹 ETL Pipeline - 7 Pasos]
-├── Paso 1: Corrección de Tipos
-├── Paso 2: Manejo de Nulos  
-├── Paso 3: Eliminación Duplicados
-├── Paso 4: Validación Geográfica
-├── Paso 5: Normalización Precios
-├── Paso 6: Validaciones Finales
-└── Paso 7: Verificación Completa
-       ↓
-[💾 Parquet Writer] → [🗜️ Snappy Compression] → [✅ Data Verification]
-       ↓
-[📊 Analytics Tools] → [📈 BI Dashboards] → [🤖 ML Models] → [📋 Business Insights]
+```text
+Proyecto/
+├─ train_airbnb_model.py          # Script de entrenamiento (PySpark)
+├─ data_raw/                      # CSV originales de Airbnb
+└─ C:/airbnb/
+   ├─ bronze/
+   │   ├─ listings/
+   │   └─ calendar/
+   ├─ silver/
+   │   ├─ listings/
+   │   └─ calendar/
+   └─ gold/
+       └─ predicciones/
 ```
 
-#### **Componentes del Diagrama:**
+## 4. Kafka: topics e ingesta
 
-- **🟢 EXTRAER**: Fase de ingesta de datos desde fuentes Airbnb (listings, neighbourhoods, reviews)
-- **🟠 TRANSFORMACIÓN**: Procesamiento con Apache Spark y Jupyter en pipeline de 7 pasos
-- **🟡 CARGAR**: Almacenamiento optimizado en formato Parquet con compresión
-- **🟣 ANÁLISIS**: Consumo de datos limpios en Power BI, Tableau y otras herramientas BI
+### 4.1. Arranque de Kafka
 
-### 🏢 Capas de la Arquitectura
-
-#### **🔵 Capa 1: Ingesta de Datos**
+```bat
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+.\bin\windows\kafka-server-start.bat .\config\server.properties
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   listings.csv  │    │neighbourhoods.csv│   │   reviews.csv   │
-│   (15,143)      │    │     (32)        │    │   (454,372)     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+
+### 4.2. Creación de topics
+
+```bat
+.\bin\windows\kafka-topics.bat --create --topic airbnb_listings --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+.\bin\windows\kafka-topics.bat --create --topic airbnb_calendar --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 ```
-- **Función**: Punto de entrada de datos
-- **Tecnología**: Spark CSV Reader con inferSchema
-- **Validación**: Verificación automática de estructura
 
-#### **🟠 Capa 2: Motor de Procesamiento**
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Apache Spark Engine                        │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐        │
-│  │ Spark Driver  │  │ Spark Executor│  │ Catalyst      │        │
-│  │   (Master)    │  │   (Worker)    │  │ (Optimizer)   │        │
-│  └───────────────┘  └───────────────┘  └───────────────┘        │
-└─────────────────────────────────────────────────────────────────┘
-```
-- **Función**: Procesamiento distribuido de datos
-- **Tecnología**: Spark 3.x en modo standalone
-- **Optimización**: Catalyst para optimización automática de consultas
+### 4.3. Productores en Python (simulación de streaming)
 
-#### **🟡 Capa 3: Transformación ETL**
-```
-┌─────────────┐ → ┌─────────────┐ → ┌─────────────┐ → ┌─────────────┐
-│   Extract   │   │  Transform  │   │  Validate   │   │    Load     │
-│   (Read)    │   │  (Clean)    │   │  (Verify)   │   │  (Write)    │
-└─────────────┘   └─────────────┘   └─────────────┘   └─────────────┘
-```
-- **Función**: Pipeline de limpieza de 7 pasos
-- **Tecnología**: PySpark DataFrame API
-- **Estrategia**: Transformaciones específicas por tipo de dato
-
-#### **🟢 Capa 4: Almacenamiento Optimizado**
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│listings_clean   │    │neighbourhoods_  │    │ reviews_clean   │
-│   .parquet      │    │  clean.parquet  │    │   .parquet      │
-│   (14,960)      │    │     (32)        │    │   (452,609)     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-- **Función**: Almacenamiento optimizado para análisis
-- **Tecnología**: Parquet con compresión Snappy
-- **Beneficio**: 70% reducción de tamaño, 10x velocidad de lectura
-
-#### **🟣 Capa 5: Consumo de Datos**
-```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  Power BI   │    │   Tableau   │    │   Pandas    │    │  Spark SQL  │
-│ (Dashboards)│    │ (Viz Tools) │    │ (Analysis)  │    │ (Queries)   │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-```
-- **Función**: Análisis y visualización de datos limpios
-- **Tecnología**: Herramientas BI y frameworks de análisis
-- **Compatibilidad**: Universal con formato Parquet
-
-### 🔀 Flujos de Datos Específicos
-
-#### **🏠 Flujo Listings (Propiedades)**
-```
-CSV Input → Schema Inference → Type Conversion → Null Handling → 
-Geographic Validation → Price Normalization → Parquet Output
-```
-- **Complejidad**: Alta (múltiples transformaciones)
-- **Registros**: 15,143 → 14,960 (eliminación de outliers)
-- **Tiempo**: ~30 segundos
-
-#### **🏘️ Flujo Neighbourhoods (Barrios)**  
-```
-CSV Input → Schema Inference → Null Imputation → Validation → Parquet Output
-```
-- **Complejidad**: Baja (dataset pequeño)
-- **Registros**: 32 → 32 (sin pérdidas)
-- **Tiempo**: ~5 segundos
-
-#### **⭐ Flujo Reviews (Reseñas)**
-```
-CSV Input → Schema Inference → Duplicate Detection → Deduplication → 
-Validation → Parquet Output
-```
-- **Complejidad**: Media (detección duplicados)
-- **Registros**: 454,372 → 452,609 (eliminación 1,763 duplicados)
-- **Tiempo**: ~45 segundos
-
-### 🔧 Decisiones de Arquitectura
-
-| **Componente** | **Decisión** | **Alternativas** | **Razón** |
-|----------------|--------------|------------------|-----------|
-| **Motor de Procesamiento** | Apache Spark | Pandas, Dask | Escalabilidad y ecosistema |
-| **Formato de Salida** | Parquet | CSV, JSON, Avro | Optimización columnar |
-| **Entorno de Desarrollo** | Jupyter Notebook | Scripts Python, IDEs | Interactividad y documentación |
-| **Estrategia de Limpieza** | Pipeline por pasos | Limpieza masiva | Trazabilidad y control |
-| **Compresión** | Snappy | LZ4, GZIP | Balance velocidad/tamaño |
-
-### 📊 Métricas de Arquitectura
-
-#### **Rendimiento del Sistema**
-| **Métrica** | **Valor** | **Benchmark** |
-|-------------|-----------|---------------|
-| **Throughput** | ~10,000 registros/seg | Excelente |
-| **Latencia de Lectura** | 2-5 segundos | Muy buena |
-| **Uso de Memoria** | ~2GB máximo | Eficiente |
-| **Tiempo Total ETL** | ~2 minutos | Óptimo |
-| **Compresión Lograda** | 70% reducción | Excelente |
-
-#### **Calidad de Datos**
-| **Aspecto** | **Antes** | **Después** | **Mejora** |
-|-------------|-----------|-------------|------------|
-| **Tipos Correctos** | 40% | 100% | +60% |
-| **Nulos Críticos** | 2,069+ | 0 | +100% |
-| **Duplicados** | 1,763 | 0 | +100% |
-| **Datos Geográficos** | Mixtos | 100% válidos | +100% |
-
-### 🚀 Escalabilidad y Evolución
-
-#### **Configuración Actual (Desarrollo)**
-```
-Local Machine → Spark Standalone → Local Files
-```
-- **Capacidad**: ~1M registros
-- **Recursos**: 8GB RAM, 4 cores
-- **Propósito**: Desarrollo y prototipado
-
-#### **Configuración Futura (Producción)**
-```
-Airflow → Spark Cluster → HDFS/S3 → BI Tools
-```
-- **Capacidad**: 100M+ registros
-- **Recursos**: Cluster distribuido
-- **Propósito**: Producción y análisis masivo
-
-## 🔍 Arquitectura del Pipeline ETL
-
-### 1. **EXTRACT (Extracción)**
-- Lectura de archivos CSV desde fuentes de datos
-- Inferencia automática de esquemas con Spark
-- Validación inicial de estructura de datos
-
-### 2. **TRANSFORM (Transformación)**
-#### 📈 Fase de Exploración:
-- Análisis de esquemas y tipos de datos
-- Identificación de valores nulos y duplicados
-- Estadísticas descriptivas iniciales
-
-#### 🧹 Fase de Limpieza:
-- **Corrección de tipos de datos**: String → Integer/Double
-- **Manejo inteligente de valores nulos**: Estrategias específicas por columna
-- **Eliminación de duplicados**: 1,763 registros duplicados removidos
-- **Validación geográfica**: Filtrado por coordenadas de Santiago
-- **Normalización de precios**: Limpieza y filtrado de outliers
-
-### 3. **LOAD (Carga)**
-- Transformación a formato Parquet con compresión Snappy
-- Particionamiento optimizado para consultas
-- Verificación de integridad de datos
-
-## 📝 Pipeline Detallado Paso a Paso
-
-### 🚀 **PASO 1: Inicialización del Entorno**
 ```python
-# Creación de SparkSession
-spark = SparkSession.builder \
-    .appName("PipelineLimpiezaAirbnb") \
-    .getOrCreate()
-```
+from kafka import KafkaProducer
+import csv, json, time
 
-### 📂 **PASO 2: Carga de Datos**
-```python
-# Lectura de archivos CSV
-listings_df = spark.read.csv("listings.csv", header=True, inferSchema=True)
-neighb_df = spark.read.csv("neighbourhoods.csv", header=True, inferSchema=True)
-reviews_df = spark.read.csv("reviews.csv", header=True, inferSchema=True)
-```
-
-### 🔍 **PASO 3: Exploración de Datos**
-- **Análisis de esquemas**: Identificación de tipos incorrectos
-- **Conteo de registros**: Verificación de volúmenes de datos
-- **Detección de nulos**: Análisis por columna
-- **Identificación de duplicados**: Especialmente en reviews
-
-#### Problemas Identificados:
-| Dataset | Problema | Cantidad |
-|---------|----------|----------|
-| Listings | Valores nulos (multiple cols) | 2,069+ |
-| Listings | neighbourhood_group nulos | 15,052 |
-| Neighbourhoods | neighbourhood_group nulos | 32 |
-| Reviews | Registros duplicados | 1,763 |
-
-### 🛠️ **PASO 4: Limpieza de Datos**
-
-#### **4.1 Corrección de Tipos de Datos**
-```python
-# Conversión de columnas numéricas
-integer_columns = ['id', 'host_id', 'minimum_nights', 'number_of_reviews', 
-                   'calculated_host_listings_count', 'number_of_reviews_ltm']
-float_columns = ['latitude', 'longitude', 'reviews_per_month']
-
-# Aplicación de conversiones con manejo de errores
-for col_name in integer_columns:
-    listings_clean = convert_to_numeric(listings_clean, col_name, IntegerType())
-```
-
-#### **4.2 Manejo de Valores Nulos**
-| Columna | Estrategia | Justificación |
-|---------|------------|---------------|
-| `neighbourhood_group` | "Sin_Grupo" | Categoría por defecto |
-| `host_name` | "Host_Desconocido" | Identificación clara |
-| `name` | "Propiedad_Sin_Nombre" | Valor descriptivo |
-| `reviews_per_month` | 0.0 | Sin actividad de reseñas |
-| `minimum_nights` | 1 | Valor mínimo lógico |
-| `latitude/longitude` | Eliminar registro | Crítico para análisis geo |
-
-#### **4.3 Eliminación de Duplicados**
-- **Reviews**: 1,763 duplicados eliminados (454,372 → 452,609)
-- **Verificación**: 0 duplicados restantes
-
-#### **4.4 Validación Geográfica**
-```python
-# Rangos válidos para Santiago, Chile
-MIN_LAT, MAX_LAT = -33.8, -33.0
-MIN_LON, MAX_LON = -70.9, -70.2
-
-# Filtrado de coordenadas válidas
-listings_clean = listings_clean.filter(
-    (col("latitude") >= MIN_LAT) & (col("latitude") <= MAX_LAT) &
-    (col("longitude") >= MIN_LON) & (col("longitude") <= MAX_LON)
+producer = KafkaProducer(
+    bootstrap_servers='localhost:9092',
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
+
+with open('data_raw/listings.csv', newline='', encoding='utf-8') as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        producer.send('airbnb_listings', row)
+        time.sleep(0.01)
+
+producer.flush()
+producer.close()
 ```
 
-#### **4.5 Normalización de Precios**
-1. **Limpieza de caracteres**: Remoción de símbolos no numéricos
-2. **Detección de outliers**: Uso de percentiles (1% y 99%)
-3. **Imputación**: Valores nulos reemplazados por mediana
-4. **Conversión**: String → Double Type
+## 5. Spark: capa BRONZE
 
-### 💾 **PASO 5: Transformación a Parquet**
+Lectura desde Kafka con Structured Streaming y escritura en Parquet:
+
 ```python
-# Guardado con compresión optimizada
-listings_clean.coalesce(1).write \
-    .mode("overwrite") \
-    .option("compression", "snappy") \
-    .parquet("data_clean_parquet/listings_clean.parquet")
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, from_json
+from pyspark.sql.types import *
+
+spark = (
+    SparkSession.builder
+    .appName('airbnb-bronze-listings')
+    .master('local[*]')
+    .getOrCreate()
+)
+
+schema_listings = StructType([...])  # definir columnas
+
+raw_stream = (
+    spark.readStream
+    .format('kafka')
+    .option('kafka.bootstrap.servers', 'localhost:9092')
+    .option('subscribe', 'airbnb_listings')
+    .load()
+)
+
+parsed = (
+    raw_stream
+    .select(from_json(col('value').cast('string'), schema_listings).alias('data'))
+    .select('data.*')
+)
+
+query = (
+    parsed.writeStream
+    .format('parquet')
+    .option('path', 'C:/airbnb/bronze/listings')
+    .option('checkpointLocation', 'C:/airbnb/checkpoints/listings')
+    .outputMode('append')
+    .start()
+)
+
+query.awaitTermination()
 ```
 
-## 📊 Resultados y Métricas
+## 6. Limpieza, enriquecimiento y unión con calendario
 
-### **Comparación Antes vs Después:**
-| Métrica | Antes | Después | Mejora |
-|---------|-------|---------|--------|
-| **Registros Listings** | 15,143 | 14,960 | -183 (outliers/inválidos) |
-| **Registros Reviews** | 454,372 | 452,609 | -1,763 (duplicados) |
-| **Valores Nulos Listings** | 2,069+ | 3,230 (solo last_review y license) | -99% críticos |
-| **Tipos de Datos Correctos** | 40% | 100% | +60% |
-| **Tamaño de Archivo** | ~50MB (CSV) | ~15MB (Parquet) | -70% |
+En `train_airbnb_model.py` se realiza:
 
-### **Calidad de Datos Final:**
-- ✅ **0 duplicados** en todos los datasets
-- ✅ **Tipos de datos optimizados** (Integer/Double)
-- ✅ **Coordenadas geográficas válidas** para Santiago
-- ✅ **Precios normalizados** sin outliers extremos
-- ✅ **Valores nulos manejados** estratégicamente
+1. Lectura de BRONZE (`listings` y `calendar`).
+2. Limpieza de columnas, tipos y outliers (`limpiar_y_enriquecer_listings`).
+3. Cálculo de `occupancy_rate` desde `calendar`.
+4. Unión listings + calendario → `listings_ml`.
 
-## 🔄 Casos de Uso de los Datos Limpios
+## 7. Entrenamiento del modelo Random Forest
 
-### **1. Análisis de Negocio**
-```sql
--- Top 5 barrios más caros
-SELECT neighbourhood, ROUND(AVG(price), 2) as precio_promedio
-FROM listings 
-GROUP BY neighbourhood 
-HAVING COUNT(*) >= 50
-ORDER BY precio_promedio DESC LIMIT 5;
+La función `entrenar_random_forest(df)`:
+
+- Define columnas categóricas (`room_type`, `neighbourhood`) y numéricas.
+- Aplica `StringIndexer` + `OneHotEncoder`.
+- Crea el vector `features` con `VectorAssembler`.
+- Define `RandomForestRegressor`.
+- Construye un `Pipeline` de ML.
+- Divide en train/test (80/20).
+- Evalúa con `RegressionEvaluator` (RMSE, MAE, R²).
+- Usa `CrossValidator` con una grid reducida (por ejemplo `numTrees=[50,100]`, `maxDepth=[5,10]`, `numFolds=2`, `parallelism=1`).
+
+Al final se imprime algo como:
+
+```text
+Metricas RandomForest: {'rmse': 668.99, 'mae': 59.43, 'r2': -0.0573}
 ```
 
-### **2. Machine Learning**
-- **Predicción de precios** basada en características
-- **Clasificación de tipos** de propiedades
-- **Análisis de sentimientos** en reseñas
-- **Modelos de recomendación** para huéspedes
+## 8. Generación de la capa GOLD
 
-### **3. Visualización de Datos**
-- **Mapas de calor** de precios por zona
-- **Dashboards interactivos** en Power BI/Tableau
-- **Gráficos de tendencias** temporales
-- **Análisis geoespacial** de la distribución
+Se aplica el mejor modelo (`cv_model`) a todo `listings_ml` y se generan las columnas:
 
-## 📁 Estructura de Archivos
+- Datos originales del anuncio (id, neighbourhood, room_type, coordenadas, etc.).
+- Variables numéricas (minimum_nights, availability_365, number_of_reviews, ...).
+- `occupancy_rate`.
+- `predicted_price_usd` (salida del modelo).
 
-```
-Big Data\Proyecto\
-├── airbnb.ipynb                    # Notebook principal del pipeline
-├── listings.csv                    # Dataset original de propiedades
-├── neighbourhoods.csv              # Dataset original de barrios  
-├── reviews.csv                     # Dataset original de reseñas
-├── data_clean_parquet/             # Directorio de datos limpios
-│   ├── listings_clean.parquet      # Propiedades limpias (14,960)
-│   ├── neighbourhoods_clean.parquet # Barrios limpios (32)
-│   └── reviews_clean.parquet       # Reseñas limpias (452,609)
-└── README.md                       # Este archivo
+Escritura en Parquet:
+
+```python
+output_path = 'C:/airbnb/gold/predicciones'
+(predicciones
+ .coalesce(1)
+ .write.mode('overwrite')
+ .parquet(output_path))
 ```
 
-## 🚀 Instrucciones de Ejecución
+## 9. Consumo desde Power BI
 
-### **Requisitos Previos:**
-1. **Java 8+** instalado y configurado
-2. **Apache Spark** descargado y configurado
-3. **Python 3.7+** con PySpark instalado
-4. **Jupyter Notebook** o VS Code con extensión Python
+1. Abrir Power BI Desktop.
+2. Ir a **Inicio → Obtener datos → Parquet**.
+3. Seleccionar el archivo dentro de `C:/airbnb/gold/predicciones/` (por ejemplo `part-00000-....snappy.parquet`).
+4. Cargar los datos.
+5. Asegurar tipos de datos correctos (decimales para precios).
+6. Crear visualizaciones:
+   - Mapa (lat/long, precio real y predicho).
+   - Barras por barrio y tipo de habitación.
+   - Tarjetas con promedio de precio predicho y ocupación.
 
-### **Ejecución del Pipeline:**
-1. **Ejecutar todas las celdas** secuencialmente
-2. **Verificar la creación** de archivos Parquet
-3. **Validar los resultados** con las métricas mostradas
+## 10. Resumen del flujo completo
 
-## 🔧 Herramientas Compatibles con Parquet
-
-### **Análisis y Visualización:**
-- 📊 **Power BI**: Conexión directa a archivos Parquet
-- 📈 **Tableau**: Lectura nativa de formato Parquet
-- 🐍 **Pandas**: `pd.read_parquet()` para análisis local
-- ⚡ **Spark SQL**: Consultas sobre datos Parquet
-
-### **Plataformas Cloud:**
-- ☁️ **AWS S3 + Athena**: Queries serverless sobre Parquet
-- ☁️ **Google BigQuery**: Importación optimizada desde Parquet
-- ☁️ **Azure Synapse**: Analytics sobre datos Parquet
-
-## 📈 Ventajas del Formato Parquet
-
-| Ventaja | Beneficio | Impacto |
-|---------|-----------|---------|
-| **Compresión** | Archivos 70% más pequeños | Menor costo de almacenamiento |
-| **Velocidad** | Lectura columnar optimizada | Consultas 10x más rápidas |
-| **Compatibilidad** | Soporte universal | Integración con cualquier herramienta |
-| **Esquemas** | Metadatos preservados | No pérdida de tipos de datos |
-
-## 🏆 Mejores Prácticas Aplicadas
-
-### **1. Calidad de Datos**
-- ✅ Validación exhaustiva de tipos
-- ✅ Estrategias específicas para valores nulos
-- ✅ Detección y eliminación de outliers
-- ✅ Verificación de integridad referencial
-
-### **2. Performance**
-- ✅ Uso de `coalesce()` para optimizar particiones
-- ✅ Compresión Snappy para balance tamaño/velocidad
-- ✅ Tipos de datos optimizados (Integer vs String)
-- ✅ Eliminación de columnas temporales
-
-### **3. Mantenibilidad**
-- ✅ Código documentado y modular
-- ✅ Funciones reutilizables para conversiones
-- ✅ Logging detallado de cada paso
-- ✅ Verificación automática de resultados
-
-## 🎉 Conclusiones
-
-El pipeline implementado demuestra la aplicación exitosa de técnicas de Big Data para el procesamiento y limpieza de datasets reales de Airbnb. Los datos resultantes en formato Parquet están optimizados para análisis avanzados y constituyen una base sólida para proyectos de machine learning y business intelligence.
-
-**Logros principales:**
-- ✅ **Pipeline ETL completo** funcional
-- ✅ **Datos limpios y optimizados** para análisis
-- ✅ **Mejora significativa** en calidad de datos (99% valores críticos)
-- ✅ **Formato escalable** para Big Data (Parquet)
-- ✅ **Documentación completa** del proceso
-
-El proyecto establece las bases para análisis más profundos del mercado Airbnb en Santiago y puede servir como referencia para pipelines similares en otros contextos de Big Data.
+1. Kafka recibe datos históricos vía productores y los envía a los topics.
+2. Spark Streaming lee de Kafka y genera la capa BRONZE en Parquet.
+3. Un job batch (`train_airbnb_model.py`) limpia, enriquece y calcula `occupancy_rate`.
+4. Se entrena un Random Forest con validación cruzada y se obtienen métricas.
+5. Se generan predicciones y se guarda la tabla GOLD en `C:/airbnb/gold/predicciones`.
+6. Power BI consume la capa GOLD y presenta el dashboard para el anfitrión.
